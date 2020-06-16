@@ -1,13 +1,13 @@
 package org.example.jobs
 
 import java.nio.file.Paths
+import java.time.ZoneId
 
-import com.couchbase.client.java.json.JsonObject
 import org.apache.flink.api.common.time
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
 import org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment, _}
-import org.example.{CouchbaseVersion3Source, CountGroupFunction, CountWithTimestamp, PostgresSqlSinkFunction}
+import org.example._
 import org.slf4j.LoggerFactory
 
 object CouchbaseJob {
@@ -27,10 +27,12 @@ object CouchbaseJob {
     // required to overcome serialization exceptions
     env.registerType(classOf[CountWithTimestamp])
 
+    val queryInput = new CouchbaseSourceQuery("test-inserts", "updated", classOf[Brewery],
+      "yyyy-MM-dd HH:mm:ss", ZoneId.of("Asia/Calcutta"))
 
-    val transactions: DataStream[JsonObject] = env
-      .addSource(new CouchbaseVersion3Source(time.Time.seconds(5)))
-      .name("transactions")
+    val transactions: DataStream[Brewery] = env
+      .addSource(new CouchbaseVersion3Source[Brewery](time.Time.seconds(5), queryInput)).name("couchbase-source")
+
 
     /*val counts = transactions.map { row =>
       // println(row.get("brewery_id"))
@@ -39,7 +41,7 @@ object CouchbaseJob {
       .timeWindow(Time.seconds(10))
       .sum(1)*/
 
-    val counts = transactions.keyBy(row => String.valueOf(row.get("brewery_id")))
+    val counts = transactions.keyBy(row => row.getBreweryId())
       .process(new CountGroupFunction)
     /*transactions.addSink(new SinkFunction[JsonObject] {
 
@@ -48,7 +50,7 @@ object CouchbaseJob {
       }
     })*/
     // counts.print()
-    counts.addSink(new PostgresSqlSinkFunction)
+    counts.addSink(new PostgresSqlSinkFunction).name("postgres-sink")
 
     env.execute("couchbase-job")
   }
