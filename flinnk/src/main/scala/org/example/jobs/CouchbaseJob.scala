@@ -1,9 +1,8 @@
 package org.example.jobs
 
 import java.nio.file.Paths
-import java.time.ZoneId
+import java.time.{Duration, ZoneId}
 
-import org.apache.flink.api.common.time
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
 import org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment, _}
@@ -15,6 +14,7 @@ object CouchbaseJob {
 
   @throws[Exception]
   def main(args: Array[String]): Unit = {
+
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
     //env.registerType(CountGroupFun)
     //env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
@@ -27,11 +27,16 @@ object CouchbaseJob {
     // required to overcome serialization exceptions
     env.registerType(classOf[CountWithTimestamp])
 
-    val queryInput = new CouchbaseSourceQuery("test-inserts", "updated", classOf[Brewery],
+    val queryInput = new CouchbaseSourceQuery(Duration.ofSeconds(5), "test-inserts", "updated", classOf[Brewery],
       "yyyy-MM-dd HH:mm:ss", ZoneId.of("Asia/Calcutta"))
 
+    val queryCatchupConfig = QueryCatchupConfig.build(Duration.ofSeconds(10), true,
+      Duration.ofSeconds(60), Duration.ofSeconds(120))
+
     val transactions: DataStream[Brewery] = env
-      .addSource(new CouchbaseVersion3Source[Brewery](time.Time.seconds(5), queryInput)).name("couchbase-source")
+      .addSource(new CouchbaseVersion3Source[Brewery](new CouchbaseClusterInfo("localhost",
+        "admin", "password"), queryInput,
+        queryCatchupConfig)).name("couchbase-source")
 
 
     /*val counts = transactions.map { row =>
