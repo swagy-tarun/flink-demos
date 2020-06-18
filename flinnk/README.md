@@ -5,7 +5,7 @@ To run and test your application locally, you can just execute `sbt run` then se
 You can also package the application into a fat jar with `sbt assembly`, then submit it as usual, with something like: 
 
 ```
-flink run -c org.example.WordCount /path/to/your/project/my-app/target/scala-2.11/testme-assembly-0.1-SNAPSHOT.jar
+flink run -c org.example.CouchbaseJob /path/to/your/project/my-app/target/scala-2.12/flinnk-assembly-0.1-SNAPSHOT.jar
 ```
 
 
