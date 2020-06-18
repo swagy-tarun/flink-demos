@@ -34,7 +34,7 @@ class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with Checkpointe
 
   import java.sql.PreparedStatement
 
-  private val UPSERT_CASE = "INSERT INTO public.account_counts (account_id, count, start_time, end_time, window_hash) " + "VALUES (?, ?, ?, ?, ?) "
+  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash) " + "VALUES (?, ?, ?, ?, ?) "
 
   private var statement: PreparedStatement = _
   private var conn: Connection = _
