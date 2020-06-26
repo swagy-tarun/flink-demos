@@ -29,7 +29,7 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunction}
 import org.slf4j.LoggerFactory
 
-class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with CheckpointedFunction {
+class PostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with CheckpointedFunction {
 
   private val Log = LoggerFactory.getLogger(classOf[PostgresSqlSinkFunction])
 
@@ -50,7 +50,7 @@ class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with Checkpointe
     statement = conn.prepareStatement(UPSERT_CASE)
   }
 
-  override def invoke(value: CDRData, context: SinkFunction.Context[_]): Unit = {
+  override def invoke(value: BreweryResult, context: SinkFunction.Context[_]): Unit = {
 
     statement.setString(1, value.accountId)
     statement.setInt(2, value.count)

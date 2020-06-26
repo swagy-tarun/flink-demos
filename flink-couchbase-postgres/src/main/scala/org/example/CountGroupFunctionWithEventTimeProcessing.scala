@@ -24,7 +24,7 @@ package org.example
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.slf4j.LoggerFactory
 
-class CountGroupFunctionWithEventTimeProcessing extends AggregateFunction[Brewery, CountWithTimestamp, CDRData] {
+class CountGroupFunctionWithEventTimeProcessing extends AggregateFunction[Brewery, CountWithTimestamp, BreweryResult] {
   private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunctionWithEventTimeProcessing])
 
   override def createAccumulator(): CountWithTimestamp = {
@@ -36,8 +36,8 @@ class CountGroupFunctionWithEventTimeProcessing extends AggregateFunction[Brewer
     CountWithTimestamp(value.getBreweryId, accumulator.count + 1, accumulator.currentProcessingTime, accumulator.extra.concat(value.getDocumentId).concat("--"))
   }
 
-  override def getResult(accumulator: CountWithTimestamp): CDRData = {
-    val out = CDRData(accumulator.key, accumulator.count, accumulator.currentProcessingTime, accumulator.currentProcessingTime, accumulator.extra)
+  override def getResult(accumulator: CountWithTimestamp): BreweryResult = {
+    val out = BreweryResult(accumulator.key, accumulator.count, accumulator.currentProcessingTime, accumulator.currentProcessingTime, accumulator.extra)
     //LOG.info(out.toString)
     out
   }

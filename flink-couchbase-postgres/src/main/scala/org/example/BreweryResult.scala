@@ -23,7 +23,7 @@ package org.example
 
 import scala.util.hashing.MurmurHash3
 
-case class CDRData(accountId: String, count: Integer, start: Long, end: Long, extra: String) {
+case class BreweryResult(accountId: String, count: Integer, start: Long, end: Long, extra: String) {
 
   val windowHash = {
     MurmurHash3.stringHash(accountId.concat(start.toString).concat(end.toString))

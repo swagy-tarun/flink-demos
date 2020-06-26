@@ -27,7 +27,7 @@ import org.apache.flink.streaming.api.functions.KeyedProcessFunction
 import org.apache.flink.util.Collector
 import org.slf4j.LoggerFactory
 
-class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (CDRData)] {
+class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (BreweryResult)] {
   private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunction])
   var state: ValueState[CountWithTimestamp] = _
 
@@ -39,8 +39,8 @@ class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (CDRData)
     }
   }
 
-  override def processElement(value: Brewery, ctx: KeyedProcessFunction[String, Brewery, (CDRData)]#Context,
-                              out: Collector[(CDRData)]): Unit = {
+  override def processElement(value: Brewery, ctx: KeyedProcessFunction[String, Brewery, (BreweryResult)]#Context,
+                              out: Collector[(BreweryResult)]): Unit = {
     LOG.info("Id {} of Record Fetched: {}", value.getDocumentId, value.getBreweryId: Any)
     val key = value.getBreweryId
     val currentProcessingTime = ctx.timerService().currentProcessingTime()
@@ -59,9 +59,9 @@ class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (CDRData)
     state.update(current)
   }
 
-  override def onTimer(timestamp: Long, ctx: KeyedProcessFunction[String, Brewery, (CDRData)]#OnTimerContext,
-                       out: Collector[(CDRData)]): Unit = {
-    val cdr = CDRData(state.value().key, state.value().count,
+  override def onTimer(timestamp: Long, ctx: KeyedProcessFunction[String, Brewery, (BreweryResult)]#OnTimerContext,
+                       out: Collector[(BreweryResult)]): Unit = {
+    val cdr = BreweryResult(state.value().key, state.value().count,
       state.value().currentProcessingTime, ctx.timerService().currentProcessingTime(), "")
     state.clear()
     LOG.info(cdr.toString)
