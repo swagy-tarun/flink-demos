@@ -20,6 +20,7 @@ package org.example
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction
@@ -45,13 +46,13 @@ class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (CDRData)
     val currentProcessingTime = ctx.timerService().currentProcessingTime()
     val current: CountWithTimestamp = state.value match {
       case null =>
-        CountWithTimestamp(key, 1, currentProcessingTime)
-      case CountWithTimestamp(key, count, lastModified) =>
+        CountWithTimestamp(key, 1, currentProcessingTime, "")
+      case CountWithTimestamp(key, count, lastModified, "") =>
         if (currentProcessingTime > lastModified + 10000) {
           ctx.timerService.registerProcessingTimeTimer(currentProcessingTime)
-          CountWithTimestamp(key, count + 1, currentProcessingTime)
+          CountWithTimestamp(key, count + 1, currentProcessingTime, "")
         } else {
-          CountWithTimestamp(key, count + 1, lastModified)
+          CountWithTimestamp(key, count + 1, lastModified, "")
         }
     }
 
@@ -60,7 +61,8 @@ class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (CDRData)
 
   override def onTimer(timestamp: Long, ctx: KeyedProcessFunction[String, Brewery, (CDRData)]#OnTimerContext,
                        out: Collector[(CDRData)]): Unit = {
-    val cdr = CDRData(state.value().key, state.value().count, state.value().currentProcessingTime, ctx.timerService().currentProcessingTime())
+    val cdr = CDRData(state.value().key, state.value().count,
+      state.value().currentProcessingTime, ctx.timerService().currentProcessingTime(), "")
     state.clear()
     LOG.info(cdr.toString)
     out.collect(cdr)

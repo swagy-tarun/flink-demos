@@ -20,9 +20,9 @@ package org.example
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-case class CountWithTimestamp(key: String, count: Int, currentProcessingTime: Long) {
+case class CountWithTimestamp(key: String, count: Int, currentProcessingTime: Long, extra: String) {
   override def toString: String = {
-    val text = "Key: %s, Count: %d "
-    text.format(this.key, this.count)
+    val text = "Key: %s, Count: %d, Extra: %s "
+    text.format(this.key, this.count, this.extra)
   }
 }

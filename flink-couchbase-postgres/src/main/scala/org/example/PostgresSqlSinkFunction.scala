@@ -20,6 +20,7 @@ package org.example
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 import java.sql.{Connection, DriverManager}
 
 import org.apache.flink.configuration.Configuration
@@ -34,7 +35,7 @@ class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with Checkpointe
 
   import java.sql.PreparedStatement
 
-  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash) " + "VALUES (?, ?, ?, ?, ?) "
+  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash, updated) " + "VALUES (?, ?, ?, ?, ?, ?) "
 
   private var statement: PreparedStatement = _
   private var conn: Connection = _
@@ -42,7 +43,7 @@ class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with Checkpointe
   override def open(parameters: Configuration): Unit = {
     super.open(parameters)
 
-    val url = "jdbc:postgresql://localhost/flink?user=postgres&password=admin&ssl=false"
+    val url = "jdbc:postgresql://localhost/flink?user=postgres&password=postgres&ssl=false"
     Class.forName("org.postgresql.Driver")
     conn = DriverManager.getConnection(url)
     conn.setAutoCommit(false)
@@ -56,6 +57,7 @@ class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with Checkpointe
     statement.setLong(3, value.start)
     statement.setLong(4, value.end)
     statement.setLong(5, value.windowHash)
+    statement.setLong(6, System.currentTimeMillis())
     statement.addBatch()
   }
 

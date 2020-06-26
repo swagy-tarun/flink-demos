@@ -3,7 +3,7 @@ ThisBuild / resolvers ++= Seq(
     Resolver.mavenLocal
 )
 
-name := "flinnk"
+name := "flink"
 
 version := "0.1-SNAPSHOT"
 

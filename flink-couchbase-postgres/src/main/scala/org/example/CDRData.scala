@@ -20,15 +20,16 @@ package org.example
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 import scala.util.hashing.MurmurHash3
 
-case class CDRData(accountId: String, count: Integer, start: Long, end: Long) {
+case class CDRData(accountId: String, count: Integer, start: Long, end: Long, extra: String) {
 
   val windowHash = {
     MurmurHash3.stringHash(accountId.concat(start.toString).concat(end.toString))
   }
 
   override def toString: String = {
-    String.format("Key: %s, Count: %d", accountId, count)
+    String.format("Key: %s, Count: %d, Extra: %s", accountId, count, extra)
   }
 }

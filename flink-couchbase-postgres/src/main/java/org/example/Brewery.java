@@ -19,6 +19,8 @@ package org.example;
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+import com.couchbase.client.core.deps.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.couchbase.client.core.deps.com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -32,9 +34,18 @@ public class Brewery implements Serializable {
     @JsonProperty("brewery_id")
     private String breweryId;
     private String updated;
+    private String eventTime;
     private String id;
     private String style;
     private String description;
+
+    public String getEventTime() {
+        return eventTime;
+    }
+
+    public void setEventTime(String eventTime) {
+        this.eventTime = eventTime;
+    }
 
     public String getId() {
         return id;
