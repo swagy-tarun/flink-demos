@@ -22,7 +22,6 @@ package org.example.jobs
  */
 
 import java.nio.file.Paths
-import java.time.format.DateTimeFormatter
 import java.time.{Duration, ZoneId}
 
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
@@ -65,7 +64,7 @@ object CouchbaseEventTimeJob {
         "admin", "password"), queryInput,
         queryCatchupConfig)).name("couchbase-source")
       .assignTimestampsAndWatermarks(
-        new TimestampExtractorAndWatermarkEmitter(zoneId, dateFormat))
+        new TimestampExtractorAndWatermarkEmitter(zoneId, dateFormat, 60000))
 
     val counts = transactions.keyBy(row => row.getBreweryId()).timeWindow(Time.seconds(10))
       .aggregate(new CountGroupFunctionWithEventTimeProcessing, new CountGroupWindowFunction)
