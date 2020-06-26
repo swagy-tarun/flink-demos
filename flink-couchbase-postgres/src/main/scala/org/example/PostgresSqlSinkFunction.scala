@@ -20,6 +20,7 @@ package org.example
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 import java.sql.{Connection, DriverManager}
 
 import org.apache.flink.configuration.Configuration
@@ -28,13 +29,13 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunction}
 import org.slf4j.LoggerFactory
 
-class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with CheckpointedFunction {
+class PostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with CheckpointedFunction {
 
   private val Log = LoggerFactory.getLogger(classOf[PostgresSqlSinkFunction])
 
   import java.sql.PreparedStatement
 
-  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash) " + "VALUES (?, ?, ?, ?, ?) "
+  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash, updated) " + "VALUES (?, ?, ?, ?, ?, ?) "
 
   private var statement: PreparedStatement = _
   private var conn: Connection = _
@@ -42,20 +43,21 @@ class PostgresSqlSinkFunction extends RichSinkFunction[CDRData] with Checkpointe
   override def open(parameters: Configuration): Unit = {
     super.open(parameters)
 
-    val url = "jdbc:postgresql://localhost/flink?user=postgres&password=admin&ssl=false"
+    val url = "jdbc:postgresql://localhost/flink?user=postgres&password=postgres&ssl=false"
     Class.forName("org.postgresql.Driver")
     conn = DriverManager.getConnection(url)
     conn.setAutoCommit(false)
     statement = conn.prepareStatement(UPSERT_CASE)
   }
 
-  override def invoke(value: CDRData, context: SinkFunction.Context[_]): Unit = {
+  override def invoke(value: BreweryResult, context: SinkFunction.Context[_]): Unit = {
 
     statement.setString(1, value.accountId)
     statement.setInt(2, value.count)
     statement.setLong(3, value.start)
     statement.setLong(4, value.end)
     statement.setLong(5, value.windowHash)
+    statement.setLong(6, System.currentTimeMillis())
     statement.addBatch()
   }
 

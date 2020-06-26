@@ -22,15 +22,18 @@ package org.example.jobs
  */
 
 import java.nio.file.Paths
+import java.time.format.DateTimeFormatter
 import java.time.{Duration, ZoneId}
 
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
+import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment, _}
+import org.apache.flink.streaming.api.windowing.time.Time
 import org.example._
 import org.slf4j.LoggerFactory
 
-object CouchbaseJob {
+object CouchbaseEventTimeJob {
   private val LOG = LoggerFactory.getLogger(CouchbaseJob.getClass)
 
   @throws[Exception]
@@ -38,7 +41,7 @@ object CouchbaseJob {
 
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
     //env.registerType(CountGroupFun)
-    //env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     // env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, time.Time.of(10, TimeUnit.SECONDS)))
     env.enableCheckpointing(30000)
     env.getCheckpointConfig.setPreferCheckpointForRecovery(true)
@@ -61,9 +64,14 @@ object CouchbaseJob {
       .addSource(new CouchbaseVersion3Source[Brewery](new CouchbaseClusterInfo("localhost",
         "admin", "password"), queryInput,
         queryCatchupConfig)).name("couchbase-source")
+      .assignTimestampsAndWatermarks(
+        new TimestampExtractorAndWatermarkEmitter(zoneId, dateFormat))
 
-    val counts = transactions.keyBy(row => row.getBreweryId())
-      .process(new CountGroupFunction)
+    val counts = transactions.keyBy(row => row.getBreweryId()).timeWindow(Time.seconds(10))
+      .aggregate(new CountGroupFunctionWithEventTimeProcessing, new CountGroupWindowFunction)
+
+    /* val counts = transactions.keyBy(row => row.getBreweryId())
+       .process(new CountGroupFunction)*/
 
     counts.addSink(new PostgresSqlSinkFunction).name("postgres-sink")
 
