@@ -10,13 +10,13 @@ import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.slf4j.LoggerFactory
 
-class TimestampExtractorAndWatermarkEmitter(zoneId: ZoneId, formatter: String) extends AssignerWithPeriodicWatermarks[Brewery] with ListCheckpointed[lang.Long] {
+class TimestampExtractorAndWatermarkEmitter(zoneId: ZoneId, formatter: String, maxOutOfOrderMillis: Long)
+  extends AssignerWithPeriodicWatermarks[Brewery] with ListCheckpointed[lang.Long] {
   private val Log = LoggerFactory.getLogger(classOf[TimestampExtractorAndWatermarkEmitter])
-  val maxOutOfOrderness = 60000
   var currentMaxTimeStamp: Long = System.currentTimeMillis()
 
   override def getCurrentWatermark: Watermark = {
-    val watermark = new Watermark(currentMaxTimeStamp - maxOutOfOrderness)
+    val watermark = new Watermark(currentMaxTimeStamp - maxOutOfOrderMillis)
     //Log.info("Current Watermark: {}", watermark.getTimestamp)
     watermark
   }
