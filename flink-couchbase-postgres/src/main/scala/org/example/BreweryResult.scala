@@ -23,13 +23,13 @@ package org.example
 
 import scala.util.hashing.MurmurHash3
 
-case class BreweryResult(accountId: String, count: Integer, start: Long, end: Long, extra: String) {
+case class BreweryResult(breweryId: String, count: Integer, start: Long, end: Long, extra: String) {
 
   val windowHash = {
-    MurmurHash3.stringHash(accountId.concat(start.toString).concat(end.toString))
+    MurmurHash3.stringHash(breweryId.concat(start.toString).concat(end.toString))
   }
 
   override def toString: String = {
-    String.format("Key: %s, Count: %d, Extra: %s", accountId, count, extra)
+    String.format("Key: %s, Count: %d, Extra: %s", breweryId, count, extra)
   }
 }

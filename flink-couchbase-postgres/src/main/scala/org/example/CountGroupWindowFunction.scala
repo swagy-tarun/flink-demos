@@ -9,8 +9,8 @@ class CountGroupWindowFunction extends ProcessWindowFunction[BreweryResult, Brew
   private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunctionWithEventTimeProcessing])
 
   override def process(key: String, context: Context, elements: Iterable[BreweryResult], out: Collector[BreweryResult]): Unit = {
-    val cdrData = elements.iterator.next()
-    val result = BreweryResult(cdrData.accountId, cdrData.count, context.window.getStart, context.window.getEnd, cdrData.extra)
+    val breweryAgg = elements.iterator.next()
+    val result = BreweryResult(breweryAgg.breweryId, breweryAgg.count, context.window.getStart, context.window.getEnd, breweryAgg.extra)
     LOG.info("From Window function: {}", result)
     out.collect(result)
   }

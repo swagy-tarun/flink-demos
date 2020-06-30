@@ -52,7 +52,7 @@ class PostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with Check
 
   override def invoke(value: BreweryResult, context: SinkFunction.Context[_]): Unit = {
 
-    statement.setString(1, value.accountId)
+    statement.setString(1, value.breweryId)
     statement.setInt(2, value.count)
     statement.setLong(3, value.start)
     statement.setLong(4, value.end)
