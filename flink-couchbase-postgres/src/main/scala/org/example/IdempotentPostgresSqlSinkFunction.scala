@@ -29,13 +29,15 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunction}
 import org.slf4j.LoggerFactory
 
-class PostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with CheckpointedFunction {
+class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with CheckpointedFunction {
 
-  private val Log = LoggerFactory.getLogger(classOf[PostgresSqlSinkFunction])
+  private val Log = LoggerFactory.getLogger(classOf[IdempotentPostgresSqlSinkFunction])
 
   import java.sql.PreparedStatement
 
-  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash, updated) " + "VALUES (?, ?, ?, ?, ?, ?) "
+  private val UPSERT_CASE = "INSERT INTO public.brewery_counts (brewery_id, count, start_time, end_time, window_hash, updated) " +
+    " VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (window_hash) DO UPDATE SET count=?, " +
+    "start_time=?, end_time=?, updated=?;"
 
   private var statement: PreparedStatement = _
   private var conn: Connection = _
@@ -58,6 +60,10 @@ class PostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with Check
     statement.setLong(4, value.end)
     statement.setInt(5, value.windowHash)
     statement.setLong(6, System.currentTimeMillis())
+    statement.setInt(7, value.count)
+    statement.setLong(8, value.start)
+    statement.setLong(9, value.end)
+    statement.setLong(10, System.currentTimeMillis())
     statement.addBatch()
   }
 
