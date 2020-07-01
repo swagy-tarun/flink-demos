@@ -26,10 +26,10 @@ import scala.util.hashing.MurmurHash3
 case class BreweryResult(breweryId: String, count: Integer, start: Long, end: Long, extra: String) {
 
   val windowHash = {
-    MurmurHash3.stringHash(breweryId.concat(start.toString).concat(end.toString))
+    Integer.valueOf(MurmurHash3.stringHash(breweryId.concat(start.toString).concat(end.toString)))
   }
 
   override def toString: String = {
-    String.format("Key: %s, Count: %d, Extra: %s", breweryId, count, extra)
+    String.format("Key: %s, Count: %d, Hash: %d, Extra: %s", breweryId, count, windowHash, extra)
   }
 }

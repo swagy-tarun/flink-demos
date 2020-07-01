@@ -67,12 +67,13 @@ object CouchbaseEventTimeJob {
         new TimestampExtractorAndWatermarkEmitter(zoneId, dateFormat, 60000))
 
     val counts = transactions.keyBy(row => row.getBreweryId()).timeWindow(Time.seconds(10))
+      .allowedLateness(Time.minutes(2))
       .aggregate(new CountGroupFunctionWithEventTimeProcessing, new CountGroupWindowFunction)
 
     /* val counts = transactions.keyBy(row => row.getBreweryId())
        .process(new CountGroupFunction)*/
 
-    counts.addSink(new PostgresSqlSinkFunction).name("postgres-sink")
+    counts.addSink(new IdempotentPostgresSqlSinkFunction).name("postgres-sink")
 
     env.execute("couchbase-job")
   }
