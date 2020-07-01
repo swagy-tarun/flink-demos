@@ -64,7 +64,9 @@ class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] 
     statement.setLong(8, value.start)
     statement.setLong(9, value.end)
     statement.setLong(10, System.currentTimeMillis())
-    statement.addBatch()
+    val result = statement.executeUpdate()
+    conn.commit()
+    Log.info("Executed sink for number of records: {}", result)
   }
 
 
@@ -75,9 +77,7 @@ class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] 
   }
 
   override def snapshotState(context: FunctionSnapshotContext): Unit = {
-    val result = statement.executeBatch()
-    conn.commit()
-    Log.info("Executed sink for number of records: {}", result.size)
+
   }
 
   override def initializeState(context: FunctionInitializationContext): Unit = {

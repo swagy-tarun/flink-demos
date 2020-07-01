@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory
 
 class TimestampExtractorAndWatermarkEmitter(zoneId: ZoneId, formatter: String, maxOutOfOrderMillis: Long)
   extends AssignerWithPeriodicWatermarks[Brewery] with ListCheckpointed[lang.Long] {
+
   private val Log = LoggerFactory.getLogger(classOf[TimestampExtractorAndWatermarkEmitter])
+
   var currentMaxTimeStamp: Long = System.currentTimeMillis()
 
   override def getCurrentWatermark: Watermark = {
