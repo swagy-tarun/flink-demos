@@ -67,6 +67,7 @@ object CouchbaseEventTimeJob {
         new TimestampExtractorAndWatermarkEmitter(zoneId, dateFormat, 60000))
 
     val counts = transactions.keyBy(row => row.getBreweryId()).timeWindow(Time.seconds(10))
+      // will trigger a window multiple times if late event arrives
       .allowedLateness(Time.minutes(2))
       .aggregate(new CountGroupFunctionWithEventTimeProcessing, new CountGroupWindowFunction)
 
