@@ -7,6 +7,7 @@ To run and test your application locally, you can just execute `sbt run` then se
 You can also package the application into a fat jar with `sbt assembly`, then submit it as usual, with something like: 
 
 ```
+sbt assembly
 flink run -c org.example.CouchbaseJob /path/to/your/project/my-app/target/scala-2.12/flinnk-assembly-0.1-SNAPSHOT.jar
 ```
 
