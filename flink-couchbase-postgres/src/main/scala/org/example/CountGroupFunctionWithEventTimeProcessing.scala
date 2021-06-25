@@ -30,6 +30,7 @@ class CountGroupFunctionWithEventTimeProcessing extends AggregateFunction[Brewer
   private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunctionWithEventTimeProcessing])
 
   override def createAccumulator(): CountWithTimestamp = {
+    // Adding hash map to buffer event time and document key
     CountWithTimestamp("", 0, 5385538, "", mutable.HashMap[String, String]())
   }
 
@@ -43,6 +44,7 @@ class CountGroupFunctionWithEventTimeProcessing extends AggregateFunction[Brewer
 
   override def getResult(accumulator: CountWithTimestamp): BreweryResult = {
     val out = BreweryResult(accumulator.key, accumulator.count, accumulator.currentProcessingTime, accumulator.currentProcessingTime, accumulator.extra)
+    // TODO: on window output execute logic which is dependent on the ordering of events.
     val sortedMap = mutable.TreeMap[String, String]()
     sortedMap ++= accumulator.buffer
     LOG.info("get Result called: {}", sortedMap)
