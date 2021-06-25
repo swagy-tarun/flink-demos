@@ -24,12 +24,14 @@ package org.example
 import java.sql.{Connection, DriverManager}
 
 import org.apache.flink.configuration.Configuration
-import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunction}
 import org.slf4j.LoggerFactory
 
-class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] with CheckpointedFunction {
+/**
+ * This class is required if you don't want to create multiple entries in database
+ * per window.
+ */
+class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] {
 
   private val Log = LoggerFactory.getLogger(classOf[IdempotentPostgresSqlSinkFunction])
 
@@ -74,13 +76,5 @@ class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] 
     if (statement != null) statement.close()
     if (conn != null) conn.close()
     super.close()
-  }
-
-  override def snapshotState(context: FunctionSnapshotContext): Unit = {
-
-  }
-
-  override def initializeState(context: FunctionInitializationContext): Unit = {
-
   }
 }
