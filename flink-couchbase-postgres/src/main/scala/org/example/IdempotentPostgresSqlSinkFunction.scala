@@ -47,7 +47,7 @@ class IdempotentPostgresSqlSinkFunction extends RichSinkFunction[BreweryResult] 
   override def open(parameters: Configuration): Unit = {
     super.open(parameters)
 
-    val url = "jdbc:postgresql://localhost/flink?user=postgres&password=postgres&ssl=false"
+    val url = "jdbc:postgresql://localhost/flink?user=postgres&password=password&ssl=false"
     Class.forName("org.postgresql.Driver")
     conn = DriverManager.getConnection(url)
     conn.setAutoCommit(false)

@@ -68,9 +68,9 @@ public class CouchbaseVersion3Source<T> extends RichSourceFunction<T> implements
       final CouchbaseSourceQuery couchbaseSourceQuery,
       final QueryCatchupConfig queryCatchupConfig) {
     this.couchbaseClusterInfo = clusterInfo;
-    final String queryformat = "select * from `%s` where %s >= $greater and updated < $less";
+    final String queryformat = "select * from `%s` where %s >= $greater and %s < $less";
     this.query = String.format(queryformat, couchbaseSourceQuery.getBucket(),
-        couchbaseSourceQuery.getDateQueryField());
+        couchbaseSourceQuery.getDateQueryField(), couchbaseSourceQuery.getDateQueryField());
     this.couchbaseSourceQuery = couchbaseSourceQuery;
     this.queryCatchupConfig = queryCatchupConfig;
   }
@@ -140,6 +140,7 @@ public class CouchbaseVersion3Source<T> extends RichSourceFunction<T> implements
                 synchronized (ctx.getCheckpointLock()) {
                   JsonObject record = row.getObject(this.couchbaseSourceQuery.getBucket());
                   try {
+                    //
                     T value = (T) this.couchbaseSourceQuery.getObjectMapper()
                         .readValue(record.toString(),
                             this.couchbaseSourceQuery.getTypeToCast());

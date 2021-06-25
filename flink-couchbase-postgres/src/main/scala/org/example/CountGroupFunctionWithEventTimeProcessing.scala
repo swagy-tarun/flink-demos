@@ -24,27 +24,34 @@ package org.example
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.slf4j.LoggerFactory
 
+import scala.collection.mutable
+
 class CountGroupFunctionWithEventTimeProcessing extends AggregateFunction[Brewery, CountWithTimestamp, BreweryResult] {
   private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunctionWithEventTimeProcessing])
 
   override def createAccumulator(): CountWithTimestamp = {
-    CountWithTimestamp("", 0, 5385538, "")
+    CountWithTimestamp("", 0, 5385538, "", mutable.HashMap[String, String]())
   }
 
   override def add(value: Brewery, accumulator: CountWithTimestamp): CountWithTimestamp = {
     LOG.info("Id {} of Record Fetched: {} with EventTime: {}", value.getDocumentId, value.getBreweryId, value.getEventTime)
-    CountWithTimestamp(value.getBreweryId, accumulator.count + 1, accumulator.currentProcessingTime, accumulator.extra.concat(value.getDocumentId).concat("--"))
+    accumulator.key = value.getBreweryId
+    accumulator.buffer += (value.getEventTime -> value.getDocumentId)
+    accumulator.count = accumulator.count + 1
+    accumulator
   }
 
   override def getResult(accumulator: CountWithTimestamp): BreweryResult = {
     val out = BreweryResult(accumulator.key, accumulator.count, accumulator.currentProcessingTime, accumulator.currentProcessingTime, accumulator.extra)
-    //LOG.info(out.toString)
+    val sortedMap = mutable.TreeMap[String, String]()
+    sortedMap ++= accumulator.buffer
+    LOG.info("get Result called: {}", sortedMap)
     out
   }
 
   override def merge(a: CountWithTimestamp, b: CountWithTimestamp): CountWithTimestamp = {
     LOG.info("Merged called")
-    CountWithTimestamp(a.key, a.count + b.count, b.currentProcessingTime, b.extra)
+    CountWithTimestamp(a.key, a.count + b.count, b.currentProcessingTime, b.extra, a.buffer ++= b.buffer)
   }
 }
 

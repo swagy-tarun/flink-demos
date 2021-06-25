@@ -21,6 +21,7 @@ package org.example.jobs
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup
@@ -31,15 +32,19 @@ import org.slf4j.LoggerFactory
 
 import java.nio.file.Paths
 import java.time.{Duration, ZoneId}
-import scala.collection.mutable
 
-object CouchbaseEventTimeJob {
+object CouchbaseJobKappaPlus {
   private val LOG = LoggerFactory.getLogger(CouchbaseJob.getClass)
 
   @throws[Exception]
   def main(args: Array[String]): Unit = {
 
+    val parametersFile = "D:\\tools\\flink-1.10.0\\conf\\couchjob.conf"
+    val parameterTool: ParameterTool = ParameterTool.fromPropertiesFile(parametersFile)
+    val retro = Integer.valueOf(parameterTool.getRequired("couchkappa.retro")).longValue()
+    LOG.info("Value for Retro: {}", retro)
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
+    env.getConfig.getGlobalJobParameters
     //env.registerType(CountGroupFun)
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     // env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, time.Time.of(10, TimeUnit.SECONDS)))
@@ -50,15 +55,15 @@ object CouchbaseEventTimeJob {
     env.setStateBackend(new FsStateBackend(Paths.get("D:\\flink-checkpoints").toUri, false))
     // required to overcome serialization exceptions
     env.registerType(classOf[CountWithTimestamp])
-    env.setParallelism(3)
+    env.setParallelism(1)
 
     val zoneId = ZoneId.of("Asia/Calcutta")
     val dateFormat = "yyyy-MM-dd HH:mm:ss"
     val eventTimeDf = dateFormat + ":SSS"
-    val queryInput = new CouchbaseSourceQuery(Duration.ofSeconds(5), "test-inserts", "updated", classOf[Brewery],
+    val queryInput = new CouchbaseSourceQuery(Duration.ofSeconds(5), "test-inserts", "eventTime", classOf[Brewery],
       dateFormat, zoneId)
 
-    val queryCatchupConfig = QueryCatchupConfig.build(Duration.ofSeconds(10), true,
+    val queryCatchupConfig = QueryCatchupConfig.build(Duration.ofSeconds(retro), false,
       Duration.ofSeconds(60), Duration.ofSeconds(120))
 
     // Source Config
@@ -67,12 +72,12 @@ object CouchbaseEventTimeJob {
         "admin", "password"), queryInput,
         queryCatchupConfig)).name("couchbase-source")
       .assignTimestampsAndWatermarks(
-        new TimestampExtractorAndWatermarkEmitter(zoneId, eventTimeDf, 60000,
-          System.currentTimeMillis()))
+        new TimestampExtractorAndWatermarkEmitter(zoneId, eventTimeDf, 100,
+          System.currentTimeMillis() - (retro * 1000)))
 
     val counts = transactions.keyBy(row => row.getBreweryId()).timeWindow(Time.seconds(10))
       // will trigger a window multiple times if late event arrives
-      .allowedLateness(Time.minutes(2))
+      // .allowedLateness(Time.minutes(2))
       .aggregate(new CountGroupFunctionWithEventTimeProcessing, new CountGroupWindowFunction)
 
     /* val counts = transactions.keyBy(row => row.getBreweryId())
@@ -80,6 +85,6 @@ object CouchbaseEventTimeJob {
 
     counts.addSink(new IdempotentPostgresSqlSinkFunction).name("postgres-sink")
 
-    env.execute("couchbase-job")
+    env.execute("couchbase-kappa-job")
   }
 }

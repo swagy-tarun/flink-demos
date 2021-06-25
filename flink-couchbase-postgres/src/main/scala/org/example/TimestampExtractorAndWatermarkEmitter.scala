@@ -1,21 +1,21 @@
 package org.example
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.{lang, util}
-import java.util.Collections
-
 import org.apache.flink.streaming.api.checkpoint.ListCheckpointed
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.slf4j.LoggerFactory
 
-class TimestampExtractorAndWatermarkEmitter(zoneId: ZoneId, formatter: String, maxOutOfOrderMillis: Long)
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.util.Collections
+import java.{lang, util}
+
+class TimestampExtractorAndWatermarkEmitter(zoneId: ZoneId, formatter: String, maxOutOfOrderMillis: Long, initialMaxTs: Long)
   extends AssignerWithPeriodicWatermarks[Brewery] with ListCheckpointed[lang.Long] {
 
   private val Log = LoggerFactory.getLogger(classOf[TimestampExtractorAndWatermarkEmitter])
 
-  var currentMaxTimeStamp: Long = System.currentTimeMillis()
+  var currentMaxTimeStamp: Long = initialMaxTs
 
   override def getCurrentWatermark: Watermark = {
     val watermark = new Watermark(currentMaxTimeStamp - maxOutOfOrderMillis)
