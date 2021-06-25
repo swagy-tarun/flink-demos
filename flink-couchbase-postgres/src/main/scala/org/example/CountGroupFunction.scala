@@ -27,6 +27,8 @@ import org.apache.flink.streaming.api.functions.KeyedProcessFunction
 import org.apache.flink.util.Collector
 import org.slf4j.LoggerFactory
 
+import scala.collection.mutable
+
 class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (BreweryResult)] {
   private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunction])
   var state: ValueState[CountWithTimestamp] = _
@@ -46,13 +48,13 @@ class CountGroupFunction extends KeyedProcessFunction[String, Brewery, (BreweryR
     val currentProcessingTime = ctx.timerService().currentProcessingTime()
     val current: CountWithTimestamp = state.value match {
       case null =>
-        CountWithTimestamp(key, 1, currentProcessingTime, "")
-      case CountWithTimestamp(key, count, lastModified, "") =>
+        CountWithTimestamp(key, 1, currentProcessingTime, "", mutable.HashMap[String, String]())
+      case CountWithTimestamp(key, count, lastModified, "", buffer) =>
         if (currentProcessingTime > lastModified + 10000) {
           ctx.timerService.registerProcessingTimeTimer(currentProcessingTime)
-          CountWithTimestamp(key, count + 1, currentProcessingTime, "")
+          CountWithTimestamp(key, count + 1, currentProcessingTime, "", buffer)
         } else {
-          CountWithTimestamp(key, count + 1, lastModified, "")
+          CountWithTimestamp(key, count + 1, lastModified, "", buffer)
         }
     }
 

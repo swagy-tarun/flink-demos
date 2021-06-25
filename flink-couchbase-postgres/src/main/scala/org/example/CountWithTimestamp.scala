@@ -1,5 +1,7 @@
 package org.example
 
+import scala.collection.mutable
+
 /**
  * MIT License
  * <p>
@@ -20,7 +22,9 @@ package org.example
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-case class CountWithTimestamp(key: String, count: Int, currentProcessingTime: Long, extra: String) {
+case class CountWithTimestamp(var key: String, var count: Int, currentProcessingTime: Long, extra: String,
+                               buffer: mutable.Map[String, String]) {
+
   override def toString: String = {
     val text = "Key: %s, Count: %d, Extra: %s "
     text.format(this.key, this.count, this.extra)

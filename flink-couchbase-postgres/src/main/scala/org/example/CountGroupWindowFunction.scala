@@ -6,7 +6,7 @@ import org.apache.flink.util.Collector
 import org.slf4j.LoggerFactory
 
 class CountGroupWindowFunction extends ProcessWindowFunction[BreweryResult, BreweryResult, String, TimeWindow] {
-  private val LOG = LoggerFactory.getLogger(classOf[CountGroupFunctionWithEventTimeProcessing])
+  private val LOG = LoggerFactory.getLogger(classOf[CountGroupWindowFunction])
 
   override def process(key: String, context: Context, elements: Iterable[BreweryResult], out: Collector[BreweryResult]): Unit = {
     val breweryAgg = elements.iterator.next()
